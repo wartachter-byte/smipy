@@ -1,4 +1,4 @@
-!!! WIP !!!
+⚠️⚠️⚠️ Work in progress ⚠️⚠️⚠️
 ## Scopes and bridges
 A scope is a standalone container with no initial elements other than read-only globals.
 + A local is a variable in the current scope. 
