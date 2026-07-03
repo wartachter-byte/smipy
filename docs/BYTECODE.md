@@ -5,7 +5,7 @@ A scope is a standalone container with no initial elements other than read-only 
 + A bridge is a variable retrieved from 1 scope up or down. Bridges can be stacked, meaning that scope A has bridge B and scope C can then make bridge D bridging to bridge B bridging to some variable.
 
 ## Variable storage
-A variable is defined as an object with a [numerical ID](#numerical-id) and an [item on the stack](#stack-item).
+A variable is defined as an object with a [numerical ID](#numerical-id) and an [item on the stack](#stack-item) that may point to a [item on the heap](#heap-item) or be a stack type.
 The numerical ID is a 16-bit value that describes locals, globals and bridged variables.
 ### Numerical ID
 The way that a numerical ID is ordered is following this method:
@@ -63,6 +63,9 @@ There are 8 types. Each one of them has a binary tag, except for the float, a fu
   [000000000000000000000000000000000000000000000000] (empty) [111] (Tag)
   The NaN type is neccesary for normal float arithmetic
   ```
+
+### Heap Item
+An heap item is an 32-byte block on the heap.
 ## Mathematical functions and order of operations
 
 | Item 1 token | Item 1 function | Item 2 token | Item 2 function | Item 3 token | Item 3 function |
