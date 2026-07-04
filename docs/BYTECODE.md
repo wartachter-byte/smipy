@@ -2,15 +2,25 @@
 ## Bytecode instructions
 Every bytecode instruction is 1 byte large and can have extra data with it.
 ### Bytecode data
-There are 2 types of bytecode data:
-+ Inline bytecode data (max. 64 bytes)
-+ Outline bytecode data (max. 16mb)
+Bytecode data is built up like this:
+```
+[0000000000000000] (Length of data in bytes, starts from 1) [~] (data)
+```
+### Bytecode instructions
+Instruction name: The name to represent the instruction.<br>
+Binary Tag: The binary value of the bytecode instruction.<br>
+Format: The instruction + Data operands.<br>
+Definiton: Defines the meaning of the instruction and operands.
+| Binary Tag | Instruction Name | Format | Defintion |
+| :---: | :---: | :---: | :---: |
+| 0x00 | OP_VAR_SET | OP_VAR_SET \<Var ID\> \<Type\> \<Value\> | Sets an variable to an value with an type |
+| 0x01 | OP_VAR_BRIDGE | OP_VAR_BRIDGE \<Var ID to bridge\> | Bridges an value of the scope above it to it's own scope as a [bridged value] (#numerical-id) |
+| 0x02 | OP_VAR_
 ## Scopes and bridges
 A scope is a standalone container with no initial elements other than read-only globals.
 + A local is a variable in the current scope. 
 + A global is a variable available from all scopes, standard read-only, but can be defined as writable from a scope.
 + A bridge is a variable retrieved from 1 scope up or down. Bridges can be stacked, meaning that scope A has bridge B and scope C can then make bridge D bridging to bridge B bridging to some variable.
-
 ## Variable storage
 A variable is defined as an object with a [numerical ID](#numerical-id) and an [item on the stack](#stack-item) that may point to a [item on the heap](#heap-item) or be a stack type.
 The numerical ID is a 16-bit value that describes locals, globals and bridged variables.
@@ -72,16 +82,16 @@ There are 8 types. Each one of them has a binary tag, except for the float, a fu
   ```
 
 ### Heap Item
-A heap item is a variable length data block stored on the heap.
-The length can be anything from 16 bytes of data (metadata excluded) to 4 megabyte of data per item.
+A heap item is a variable length data item stored on the heap.
+The length can be anything from 16 bytes of data (metadata excluded) to 1 megabyte of data per item.
 Any longer can be made by combining heap items, this is however not part of the VM and should instead be done by the builtin/user program.
 
 A heap item is built up in this form:
 ```
-[00000000] (Type ID) [00000000] (Length of data) [~] (Data)
+[00000000] (Type ID, 1 byte) [0000000000000000] (Length of data, 2 bytes) [~] (Data)
 The type ID is used as an identifier for heap types.
 The length of the data in bytes is gotten by using this formula where n is the stored length:
-(n + 16) * 16
+(n + 1) * 16
 ```
 For expanding the size of a heap item, the system should never fragment and instead move the item to an empty space.
 #### Heap builtin types
@@ -92,22 +102,37 @@ For expanding the size of a heap item, the system should never fragment and inst
   Head item:
   [00000000000000000000000000000000] (Length of string in characters, 32-bit)
   [00000000000000000000000000000000] (Length of string in bytes, 32-bit)
-  [0000000000000000] (length of current string in block)
-  [000000000000000000000000] (Amount of items, 24-bit)
+  [0000000000000000] (length of current string in item)
+  [00000000] (Amount of items, 8-bit)
   
   [[0 (sign bit) 000000000000000000000000000000000000000] (1 item offset pointer) ...] (item table)
   [[00000000] (Byte) [00000000] [00000000] ...] (string)
   
   Piece item:
-  [0000000000000000] (length of current string in block)
+  [0000000000000000] (length of current string in item)
   [[00000000] (Byte) [00000000] [00000000] ...] (string)
   ```
 + Bytes type:
-  + Same as Long String but only with the length in bytes as header metadata.
+  ```
+  Head Item:
+  [0000000000000000000000000000000000000000000000000000000000000000] (length of bytes array, 64-bit)
+  [0000000000000000] (length of data in current item)
+  [00000000] (Amount of item pointers in current item)
+  [[0 (sign bit) 000000000000000000000000000000000000000] (1 item offset pointer) ...] (item table)
+  [[00000000] (Byte) [00000000] [00000000] ...] (bytes array)
+
+  Piece Item:
+  [0000000000000000] (length of data in current item)
+  [00000000] (Amount of item pointers in current item)
+  [[0 (sign bit) 000000000000000000000000000000000000000] (1 item offset pointer) ...] (item table)
+  [[00000000] (Byte) [00000000] [00000000] ...] (bytes array)
+  ```
 + List:
   ```
   Split into 2 types: List-head and List-piece.
-  A list-head should be interpreted as a list object, a list-piece must not be interpreted as an list object.
+  List-head represents the list object and it points to objects in the list or list-pieces,
+  that point to objects in the list or list-pieces, that point to ...
+  When a pointer points to a list-piece object, it should throw a InvalidPointer exception.
   list-head item:
   [000000000000000000000000] (amount of items in list) [00000000] (amount of pointers)
   [[0 (sign bit) 000000000000000000000000000000000000000] (1 item offset pointer) ...] (item table)
