@@ -14,8 +14,9 @@ Definiton: Defines the meaning of the instruction and operands.
 | Binary Tag | Instruction Name | Format | Defintion |
 | :---: | :---: | :---: | :---: |
 | 0x00 | OP_VAR_SET | OP_VAR_SET \<Var ID\> \<Type\> \<Value\> | Sets an variable to an value with an type |
-| 0x01 | OP_VAR_BRIDGE | OP_VAR_BRIDGE \<Var ID to bridge\> | Bridges an value of the scope above it to it's own scope as a [bridged value] (#numerical-id) |
-| 0x02 | OP_VAR_
+| 0x01 | OP_VAR_BRIDGE | OP_VAR_BRIDGE \<Var ID to bridge\> | Bridges an value of the scope above it to it's own scope as a bridged value (Variable Storage - Numerical ID) |
+| 0x02 | OP_MATH_EXP | OP_MATH_EXP \<Var Destination\> \<Var A\> \<Var B\> | Calculates an exponential using A and B and stores it in the Destination |
+
 ## Scopes and bridges
 A scope is a standalone container with no initial elements other than read-only globals.
 + A local is a variable in the current scope. 
